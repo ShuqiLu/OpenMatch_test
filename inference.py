@@ -5,9 +5,12 @@ import torch.nn as nn
 
 from transformers import AutoTokenizer
 import OpenMatch as om
+import tqdm
 
 def test(args, model, test_loader, device):
     rst_dict = {}
+    #print('???',len(test_loader))
+    index=0
     for test_batch in test_loader:
         query_id, doc_id, retrieval_score = test_batch['query_id'], test_batch['doc_id'], test_batch['retrieval_score']
         with torch.no_grad():
@@ -32,6 +35,8 @@ def test(args, model, test_loader, device):
                     rst_dict[q_id] = {}
                 if d_id not in rst_dict[q_id] or b_s > rst_dict[q_id][d_id]:
                     rst_dict[q_id][d_id] = [b_s]
+            print('???',len(batch_score),index)
+            index+=1
     return rst_dict
 
 def main():
@@ -196,6 +201,7 @@ def main():
 
     state_dict = torch.load(args.checkpoint)
     if args.model == 'bert':
+        print('???',state_dict.keys())
         st = {}
         for k in state_dict:
             if k.startswith('bert'):
@@ -204,6 +210,7 @@ def main():
                 st['_dense'+k[len('classifier'):]] = state_dict[k]
             else:
                 st[k] = state_dict[k]
+
         model.load_state_dict(st)
     else:
         model.load_state_dict(state_dict)
